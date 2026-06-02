@@ -1,4 +1,3 @@
-<img width="1440" height="900" alt="Screenshot 2026-06-02 at 9 38 56 PM" src="https://github.com/user-attachments/assets/cf221ee6-bcea-4e90-9d8c-83d08a2e7d11" />
 
 <div align="center">
 
@@ -40,7 +39,10 @@ Ask it to summarize a research paper, extract key clauses from a contract, or qu
 - 📍 **Source Page Citations** — Every answer shows which pages were referenced
 - 🎨 **Premium Dark UI** — Custom Streamlit CSS with Syne + DM Sans typography
 
+<img width="1440" height="900" alt="Screenshot 2026-06-02 at 9 38 56 PM" src="https://github.com/user-attachments/assets/4bdae1ab-7a46-4bdb-9512-438ec0c9b185" />
+
 ---
+
 
 ## 🏗️ Architecture
 
