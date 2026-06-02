@@ -1,4 +1,4 @@
-![Uploading IMG_7205.PNG…]()
+<img width="1170" height="2532" alt="IMG_7205" src="https://github.com/user-attachments/assets/efa73a5f-9605-4e93-9dab-63a7a010ee70" />
 
 <div align="center">
 
