@@ -15,8 +15,6 @@
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-6366f1?style=flat-square)](https://trychroma.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 
-![QueryDocs Demo](https://via.placeholder.com/860x400/0a0a0f/7c6fff?text=QueryDocs+—+Demo+Screenshot)
-
 </div>
 
 ---
