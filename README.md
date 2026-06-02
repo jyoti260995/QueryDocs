@@ -110,7 +110,7 @@ Get your free Mistral API key at [console.mistral.ai](https://console.mistral.ai
 ### 4. Run the app
 
 ```bash
-streamlit run main.py
+streamlit run app.py
 ```
 
 Open your browser at `http://localhost:8501` 🎉
@@ -147,7 +147,7 @@ pip install streamlit langchain langchain-community langchain-text-splitters \
 
 ```
 querydocs/
-├── main.py            # Main Streamlit application
+├── app.py            # Main Streamlit application
 ├── .env               # API keys (not committed)
 ├── .env.example       # Example env file
 ├── requirements.txt   # Python dependencies
@@ -165,30 +165,3 @@ querydocs/
 - [ ] Streaming responses
 - [ ] Docker deployment
 
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-1. Fork the repo
-2. Create your branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-Built with ❤️ by **[Your Name](https://github.com/yourusername)**
-
-⭐ Star this repo if you found it useful!
-
-</div>
