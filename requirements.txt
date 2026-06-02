@@ -1,0 +1,12 @@
+mistralai
+langchain
+langchain-community
+langchain-text-splitters
+langchain-mistralai
+sentence-transformers
+langchain-huggingface
+chromadb
+langchain-chroma
+pypdf
+python-dotenv
+streamlit
