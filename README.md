@@ -87,8 +87,8 @@ PyPDFLoader  ──►  RecursiveCharacterTextSplitter  ──►  Chunks
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/yourusername/querydocs.git
-cd querydocs
+git clone https://github.com/jyoti260995/QueryDocs.git
+cd QueryDocs
 ```
 
 ### 2. Install dependencies
@@ -99,7 +99,7 @@ pip install -r requirements.txt
 
 ### 3. Set up environment variables
 
-Create a `.env` file in the root directory:
+Copy `.env.example` to `.env` and add your key:
 
 ```env
 MISTRAL_API_KEY=your_mistral_api_key_here
@@ -117,41 +117,43 @@ Open your browser at `http://localhost:8501` 🎉
 
 ---
 
-## 📦 Requirements
-
-```txt
-streamlit
-langchain
-langchain-community
-langchain-text-splitters
-langchain-huggingface
-langchain-chroma
-langchain-mistralai
-chromadb
-sentence-transformers
-pypdf
-python-dotenv
-```
-
-Or install all at once:
+## 🐳 Run with Docker
 
 ```bash
-pip install streamlit langchain langchain-community langchain-text-splitters \
-  langchain-huggingface langchain-chroma langchain-mistralai chromadb \
-  sentence-transformers pypdf python-dotenv
+docker build -t querydocs .
+docker run --rm -p 8501:8501 -e MISTRAL_API_KEY=your_key querydocs
 ```
+
+The embedding model is downloaded at build time, so the container only needs network access for the Mistral API. It runs as a non-root user and has a health check on `/_stcore/health`.
+
+---
+
+## 🧪 Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+The tests build small PDFs on the fly and use fake embeddings, so they run offline with no API key or model download. They cover PDF loading and chunking, retrieval, source-page citations, prompt building, HTML escaping of chat messages, and cleanup of temporary files.
+
+GitHub Actions runs the tests, then builds the Docker image and checks the container's health endpoint, on every push and pull request.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-querydocs/
-├── app.py            # Main Streamlit application
-├── .env               # API keys (not committed)
-├── .env.example       # Example env file
-├── requirements.txt   # Python dependencies
-└── README.md          # You are here
+QueryDocs/
+├── app.py                  # Streamlit UI
+├── querydocs/
+│   └── rag.py              # RAG pipeline: load, split, index, prompt, render
+├── tests/                  # pytest suite (offline)
+├── Dockerfile
+├── requirements.txt        # pinned runtime dependencies
+├── requirements-dev.txt    # + test dependencies
+├── .env.example            # example environment file
+└── .github/workflows/ci.yml
 ```
 
 ---
@@ -163,5 +165,4 @@ querydocs/
 - [ ] Conversation memory across sessions
 - [ ] Support for DOCX, TXT, and web URLs
 - [ ] Streaming responses
-- [ ] Docker deployment
 
