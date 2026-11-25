@@ -1,12 +1,11 @@
 import os
-import tempfile
+
 import streamlit as st
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_mistralai import ChatMistralAI
+
+from querydocs.rag import build_prompt, index_pdf_bytes, message_html, source_pages
 
 load_dotenv()
 
@@ -304,69 +303,48 @@ st.markdown("""
 
 # ─── Upload ─────────────────────────────────────────────────────────────────────
 st.markdown('<div class="dm-upload-label">📎 Upload Document</div>', unsafe_allow_html=True)
-uploaded_file = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
+uploaded_file = st.file_uploader("Upload a PDF", type=["pdf"], label_visibility="collapsed")
 
 if uploaded_file is not None:
     file_key = uploaded_file.name + str(uploaded_file.size)
     if st.session_state.get("last_file_key") != file_key:
         st.session_state.last_file_key = file_key
         st.session_state.messages = []  # clear chat on new doc
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(uploaded_file.read())
-            tmp_path = tmp.name
+        if st.session_state.get("indexed") is not None:
+            st.session_state.indexed.close()  # free the previous document's vector store
+        st.session_state.indexed = None
+        st.session_state.retriever = None
+        st.session_state.doc_meta = None
 
         with st.spinner(""):
-            loader = PyPDFLoader(tmp_path)
-            documents = loader.load()
-            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-            chunks = splitter.split_documents(documents)
-            persist_dir = tempfile.mkdtemp()
-            vdb = Chroma.from_documents(
-                documents=chunks,
-                embedding=embedding_model,
-                persist_directory=persist_dir
-            )
-            st.session_state.retriever = vdb.as_retriever(search_kwargs={"k": 3})
-            st.session_state.doc_meta = {
-                "name": uploaded_file.name,
-                "pages": len(documents),
-                "chunks": len(chunks)
-            }
+            try:
+                indexed = index_pdf_bytes(uploaded_file.getvalue(), embedding_model)
+            except ValueError as err:
+                st.error(str(err))
+            else:
+                st.session_state.indexed = indexed
+                st.session_state.retriever = indexed.retriever
+                st.session_state.doc_meta = {
+                    "name": uploaded_file.name,
+                    "pages": indexed.pages,
+                    "chunks": indexed.chunks,
+                }
 
     meta = st.session_state.doc_meta
-    st.success(
-        f"✅ **{meta['name']}** — {meta['pages']} pages · {meta['chunks']} chunks indexed"
-    )
-    st.markdown('<div class="dm-divider"></div>', unsafe_allow_html=True)
+    if meta:
+        st.success(
+            f"✅ **{meta['name']}** — {meta['pages']} pages · {meta['chunks']} chunks indexed"
+        )
+        st.markdown('<div class="dm-divider"></div>', unsafe_allow_html=True)
 
 # ─── Chat History ───────────────────────────────────────────────────────────────
 if st.session_state.messages:
     st.markdown('<div class="dm-chat-wrapper">', unsafe_allow_html=True)
     for msg in st.session_state.messages:
-        role = msg["role"]
-        avatar = "👤" if role == "user" else "🔍"
-        content_html = msg["content"].replace("\n", "<br>")
-
-        if role == "user":
-            st.markdown(f"""
-            <div class="dm-msg user">
-              <div class="dm-avatar user">{avatar}</div>
-              <div class="dm-bubble user">{content_html}</div>
-            </div>""", unsafe_allow_html=True)
-        else:
-            sources_html = ""
-            if msg.get("sources"):
-                pills = "".join(
-                    f'<span class="dm-source-pill">p.{s}</span>'
-                    for s in msg["sources"]
-                )
-                sources_html = f'<div class="dm-sources">{pills}</div>'
-            st.markdown(f"""
-            <div class="dm-msg ai">
-              <div class="dm-avatar ai">{avatar}</div>
-              <div class="dm-bubble ai">{content_html}{sources_html}</div>
-            </div>""", unsafe_allow_html=True)
+        st.markdown(
+            message_html(msg["role"], msg["content"], msg.get("sources", ())),
+            unsafe_allow_html=True,
+        )
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── Input ──────────────────────────────────────────────────────────────────────
@@ -377,27 +355,12 @@ if st.session_state.retriever:
 
         with st.spinner(""):
             docs = st.session_state.retriever.invoke(question)
-            context = "\n\n".join(doc.page_content for doc in docs)
-            source_pages = sorted(set(
-                doc.metadata.get("page", "?") + 1
-                for doc in docs
-                if doc.metadata.get("page") is not None
-            ))
-            prompt = f"""You are QueryDocs, an expert AI assistant that answers questions strictly from the provided document context.
-Be concise, accurate, and insightful. Format your answer clearly.
-If the answer is not in the context, respond: "This information isn't available in the uploaded document."
-
-Context:
-{context}
-
-Question: {question}
-Answer:"""
-            response = llm.invoke(prompt)
+            response = llm.invoke(build_prompt(question, docs))
 
         st.session_state.messages.append({
             "role": "assistant",
             "content": response.content,
-            "sources": source_pages
+            "sources": source_pages(docs),
         })
         st.rerun()
 else:
